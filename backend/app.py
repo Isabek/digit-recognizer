@@ -1,15 +1,13 @@
 import base64
-import io
 import re
 
 import numpy as np
-
-from PIL import Image
 from flask import Flask, jsonify
 from flask import request
 from flask_cors import cross_origin
+from imageio import imread
 from keras.models import load_model
-from keras.preprocessing.image import img_to_array
+from skimage.transform import resize
 
 app = Flask(__name__)
 
@@ -23,24 +21,23 @@ def load_keras_model():
     model = load_model(MODEL_PATH)
 
 
-def prepare_image(image, target):
-    if image.mode != "L":
-        image = image.convert("L")
-    image = image.resize(target)
-    image = img_to_array(image)
-    image = image.reshape(1, target[0], target[1], 1).astype('float32')
-    return image
-
-
 @app.route('/api/v1/recognize', methods=['POST'])
 @cross_origin(allow_headers=['Content-Type', "Access-Control-Allow-Credentials"])
 def recognize():
     image_data = re.sub('^data:image/.+;base64,', '', request.form['image'])
     image_data = base64.b64decode(image_data)
-    image = Image.open(io.BytesIO(image_data))
-    image = prepare_image(image, target=(28, 28))
-    result = model.predict(image)
-    return jsonify({'message': "Image has been successfully uploaded"})
+
+    with open("temp.png", "wb") as f:
+        f.write(image_data)
+
+    temp_image = imread("temp.png", pilmode="L")
+    temp_image = resize(temp_image, output_shape=(28, 28), mode='reflect')
+    temp_image = temp_image.reshape(1, 28, 28, 1).astype('float32')
+
+    predicted = model.predict(temp_image)
+    label = np.argmax(predicted)
+    probability = predicted[0][label]
+    return jsonify({'label': str(label), "probability": str(probability)})
 
 
 if __name__ == "__main__":

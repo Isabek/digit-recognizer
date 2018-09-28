@@ -11,7 +11,14 @@ class App extends Component {
             width: this.refs.paintRegion.clientWidth,
             height: this.refs.paintRegion.clientHeight,
             top: this.refs.canvas.getBoundingClientRect().top,
-            left: this.refs.canvas.getBoundingClientRect().left
+            left: this.refs.canvas.getBoundingClientRect().left,
+            label: 'Unknown',
+            probability: 'Unknown'
+        }, () => {
+            const ctx = this.refs.canvas.getContext('2d');
+            ctx.fillStyle = "white";
+            ctx.lineJoin = ctx.lineCap = 'round';
+            ctx.fillRect(0, 0, this.refs.canvas.width, this.refs.canvas.height);
         });
     }
 
@@ -83,24 +90,33 @@ class App extends Component {
         ctx.moveTo(this.state.previousX, this.state.previousY);
         ctx.lineTo(this.state.currentX, this.state.currentY);
         ctx.strokeStyle = "black";
-        ctx.lineWidth = 8;
+        ctx.lineWidth = 20;
         ctx.stroke();
         ctx.closePath();
     }
 
     clear() {
-        this.refs.canvas.getContext('2d').clearRect(0, 0, this.state.width, this.state.height);
+        const ctx = this.refs.canvas.getContext('2d');
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, this.refs.canvas.width, this.refs.canvas.height);
     }
 
-    recognize(event) {
+    recognize() {
+
         let data = this.refs.canvas.toDataURL();
-        console.log(data.length);
+
         $.ajax({
             type: 'POST',
             url: 'http://127.0.0.1:8080/api/v1/recognize',
             data: {image: data},
-            success: () => {
+            success: (data) => {
+                console.log(data.label)
+                this.setState({
+                    probability: data.probability,
+                    label: data.label
+                }, () => {
 
+                });
             },
             error: function () {
                 console.log("error");
@@ -120,7 +136,7 @@ class App extends Component {
                                      ref="spinner"/>
                         </div>
 
-                        <div className="col-md-6">
+                        <div className="col-md-4">
                             <div id="paintRegion" className="col-md-12 paint-region" ref="paintRegion">
                                 <canvas width={this.state.width}
                                         height={this.state.height}
@@ -144,9 +160,11 @@ class App extends Component {
                                 </div>
                             </div>
                         </div>
-                        <div className="col-md-6">
-                            <div className="col-md-12 paint-region">
-                            </div>
+                        <div className="col-md-8">
+                            <h3>Predicted Number: <span className="label label-info">{this.state.label}</span></h3>
+                            <h3>Predicted Probability: <span
+                                className="label label-info">{this.state.probability}</span>
+                            </h3>
                         </div>
                     </div>
                 </div>
