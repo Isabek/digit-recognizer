@@ -14,7 +14,7 @@ npm install
 
 ### Backend
 
-On the backend side used Flask. 
+On the backend side used Flask for REST API. 
 
 ```sh
 cd digit-recognizer/backend
@@ -24,3 +24,8 @@ virtualenv -p python3 venv
 pip install -r requirements.txt
 
 ```
+
+
+### Result
+
+![Digit Recognizer](https://github.com/Isabek/digit-recognizer/blob/master/screen.png)
