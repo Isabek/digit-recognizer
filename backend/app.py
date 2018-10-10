@@ -1,5 +1,7 @@
 import base64
+import os
 import re
+import uuid
 
 import numpy as np
 from flask import Flask, jsonify
@@ -27,13 +29,17 @@ def recognize():
     image_data = re.sub('^data:image/.+;base64,', '', request.form['image'])
     image_data = base64.b64decode(image_data)
 
-    with open("temp.png", "wb") as f:
+    filename = "{}.{}".format(uuid.uuid4(), "png")
+    with open(filename, "wb") as f:
         f.write(image_data)
 
-    temp_image = imread("temp.png", pilmode="L")
+    temp_image = imread(filename, pilmode="L")
     temp_image = np.invert(temp_image)
     temp_image = resize(temp_image, output_shape=(28, 28), mode='reflect')
     temp_image = temp_image.reshape(1, 28, 28, 1).astype('float32')
+
+    if os.path.exists(filename):
+        os.remove(filename)
 
     predicted = model.predict(temp_image)
     label = np.argmax(predicted)
