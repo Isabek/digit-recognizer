@@ -31,6 +31,7 @@ def recognize():
         f.write(image_data)
 
     temp_image = imread("temp.png", pilmode="L")
+    temp_image = np.invert(temp_image)
     temp_image = resize(temp_image, output_shape=(28, 28), mode='reflect')
     temp_image = temp_image.reshape(1, 28, 28, 1).astype('float32')
 
